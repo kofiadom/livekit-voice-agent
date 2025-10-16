@@ -35,8 +35,6 @@ services:
       - AZURE_TTS_API_VERSION=${AZURE_TTS_API_VERSION}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - TOOLBOX_URL=http://mcp-toolbox:5000
-    volumes:
-      - ./.env:/home/appuser/.env:ro
     depends_on:
       - mcp-toolbox
     networks:
