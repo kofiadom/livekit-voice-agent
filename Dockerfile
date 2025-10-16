@@ -26,20 +26,26 @@ RUN apt-get update && \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-USER appuser
-
-RUN mkdir -p /home/appuser/.cache
-RUN chown -R appuser /home/appuser/.cache
-
 WORKDIR /home/appuser
 
 COPY requirements.txt .
+
+# Switch to appuser for pip install
+USER appuser
 RUN python -m pip install --user --no-cache-dir -r requirements.txt
 
+# Switch back to root to copy files and create database
+USER root
 COPY . .
 
-# Create the volunteer database at build time
+# Create the volunteer database at build time (as root to avoid permission issues)
 RUN python create_volunteers_db.py
+
+# Change ownership of all files to appuser
+RUN chown -R appuser:appuser /home/appuser
+
+# Switch back to appuser for runtime
+USER appuser
 
 # ensure that any dependent models are downloaded at build-time
 RUN python agent.py download-files || echo "download-files command not available, skipping model pre-download"
