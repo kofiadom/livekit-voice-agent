@@ -1,0 +1,81 @@
+# Python artifacts
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Local environment & config files
+.env
+.env.local
+.env.production
+.env.staging
+.DS_Store
+*.local
+
+# Logs & temp files
+*.log
+*.gz
+*.tgz
+.tmp
+.cache
+logs/
+
+# Docker artifacts
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Git & Editor files
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+*.swo
+
+# Testing files
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Documentation
+*.md
+docs/
+
+# Development tools
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files created during development
+test_*.py
+*_test.py
