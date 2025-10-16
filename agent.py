@@ -134,18 +134,9 @@ async def entrypoint(ctx: agents.JobContext):
             logger.error(f"Missing required environment variables: {missing_vars}")
             raise ValueError(f"Missing environment variables: {missing_vars}")
 
-        # Get MCP Toolbox URL from environment
-        # For LiveKit Cloud: use your Coolify public URL (e.g., https://your-toolbox.coolify.app)
-        # For local Docker: use http://mcp-toolbox:5000
-        toolbox_url = os.getenv("TOOLBOX_URL")
-        if not toolbox_url:
-            raise ValueError("TOOLBOX_URL environment variable is required. Set it to your Coolify MCP Toolbox URL (e.g., https://your-toolbox.coolify.app)")
-        
+        # Get MCP Toolbox URL from environment or use default for Docker Compose
+        toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000")
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
-        
-        # Validate toolbox URL format
-        if not toolbox_url.startswith(('http://', 'https://')):
-            raise ValueError(f"Invalid TOOLBOX_URL: {toolbox_url}. Must be a valid HTTP/HTTPS URL.")
 
         session = AgentSession(
             llm=openai.LLM.with_azure(
