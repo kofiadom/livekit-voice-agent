@@ -4,7 +4,7 @@ services:
   mcp-toolbox:
     image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.16.0
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./tools.yaml:/app/tools.yaml
       - ./volunteers.db:/app/volunteers.db
