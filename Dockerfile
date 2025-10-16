@@ -1,10 +1,8 @@
+# This is a Dockerfile for LiveKit Voice Agent with MCP Toolbox
+# Based on LiveKit's official custom deployment example
 # syntax=docker/dockerfile:1
-
-# Use the official UV Python base image with Python 3.11 on Debian Bookworm
-# UV is a fast Python package manager that provides better performance than pip
-# We use the slim variant to keep the image size smaller while still having essential tools
-ARG PYTHON_VERSION=3.11
-FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS base
+ARG PYTHON_VERSION=3.11.6
+FROM python:${PYTHON_VERSION}-slim
 
 # Keeps Python from buffering stdout and stderr to avoid situations where
 # the application crashes without emitting any logs due to buffering.
@@ -16,58 +14,38 @@ ARG UID=10001
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/app" \
+    --home "/home/appuser" \
     --shell "/sbin/nologin" \
     --uid "${UID}" \
     appuser
 
-# Install build dependencies required for Python packages with native extensions
-# gcc: C compiler needed for building Python packages with C extensions
-# python3-dev: Python development headers needed for compilation
-# We clean up the apt cache after installation to keep the image size down
-RUN apt-get update && apt-get install -y \
+# Install gcc and other build dependencies.
+RUN apt-get update && \
+    apt-get install -y \
     gcc \
     python3-dev \
-  && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Create a new directory for our application code
-# And set it as the working directory
-WORKDIR /app
+USER appuser
 
-# Copy just the dependency files first, for more efficient layer caching
-COPY pyproject.toml uv.lock ./
+RUN mkdir -p /home/appuser/.cache
+RUN chown -R appuser /home/appuser/.cache
 
-# Install Python dependencies using UV's lock file
-# --locked ensures we use exact versions from uv.lock for reproducible builds
-# This creates a virtual environment and installs all dependencies
-# Ensure your uv.lock file is checked in for consistency across environments
-RUN uv sync --locked
+WORKDIR /home/appuser
 
-# Copy all remaining application files into the container
-# This includes source code, configuration files, and dependency specifications
-# (Excludes files specified in .dockerignore)
+COPY requirements.txt .
+RUN python -m pip install --user --no-cache-dir -r requirements.txt
+
 COPY . .
 
 # Create the volunteer database at build time
-RUN uv run python create_volunteers_db.py
+RUN python create_volunteers_db.py
 
-# Change ownership of all app files to the non-privileged user
-# This ensures the application can read/write files as needed
-RUN chown -R appuser:appuser /app
+# ensure that any dependent models are downloaded at build-time
+RUN python agent.py download-files || echo "download-files command not available, skipping model pre-download"
 
-# Switch to the non-privileged user for all subsequent operations
-# This improves security by not running as root
-USER appuser
-
-# Pre-download any ML models or files the agent needs
-# This ensures the container is ready to run immediately without downloading
-# dependencies at runtime, which improves startup time and reliability
-RUN uv run agent.py download-files
-
-# Expose healthcheck port (LiveKit agents typically use 8081)
+# expose healthcheck port
 EXPOSE 8081
 
-# Run the application using UV
-# UV will activate the virtual environment and run the agent.
-# The "start" command tells the worker to connect to LiveKit and begin waiting for jobs.
-CMD ["uv", "run", "agent.py", "start"]
+# Run the application.
+CMD ["python", "agent.py", "start"]

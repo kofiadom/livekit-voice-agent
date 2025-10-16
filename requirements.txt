@@ -1,0 +1,13 @@
+# LiveKit Agent Dependencies
+livekit-agents[codecs,images,openai,silero]
+livekit-plugins-deepgram
+livekit-plugins-openai
+livekit-plugins-silero
+livekit-plugins-noise-cancellation
+
+# Environment and Configuration
+python-dotenv
+
+# Additional dependencies that might be needed
+aiohttp
+asyncio
