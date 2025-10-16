@@ -11,8 +11,12 @@ from livekit.plugins import noise_cancellation, silero
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("volunteer-agent")
+
+# Create MCP logger for debugging tool calls
+mcp_logger = logging.getLogger("mcp-tools")
+mcp_logger.setLevel(logging.DEBUG)
 
 
 def _ensure_database_path():
@@ -61,6 +65,8 @@ class VolunteerAssistant(Agent):
             
             You speak to elderly users with respect, warmth, and patience. You understand they may need extra time and clear explanations.
             
+            **IMPORTANT: You MUST use the available MCP tools to search for volunteers. Always call the appropriate tool when a user asks for help.**
+            
             **Available Tools to Help Find Volunteers:**
             - search-volunteers-by-skills: Find volunteers who can help with specific tasks (cooking, companionship, transportation, medication reminders, light housekeeping, etc.)
             - search-volunteers-by-location: Find volunteers near you (Accra, Kumasi, Tamale, Cape Coast, Tema, etc.)
@@ -98,13 +104,28 @@ class VolunteerAssistant(Agent):
             **Your approach:**
             1. Listen carefully to what kind of help they need
             2. Ask gentle questions to understand their location and preferences
-            3. Search the volunteer database using the tools
+            3. **ALWAYS use the MCP tools to search the volunteer database**
             4. Present 2-3 good volunteer options clearly and simply
             5. Offer to find more volunteers if they want different options
             6. Be encouraging and reassuring throughout
             
+            **CRITICAL: When a user asks for help finding volunteers, you MUST call one of the MCP tools. Do not provide generic responses without searching the database first.**
+            
             Remember: You are helping elderly people find caring volunteers to assist them. Be patient, kind, and thorough in your help.""",
         )
+    
+    async def on_tool_call(self, tool_call):
+        """Log all tool calls for debugging"""
+        mcp_logger.info(f"🔧 Tool called: {tool_call.name}")
+        mcp_logger.info(f"📝 Tool arguments: {tool_call.arguments}")
+        
+        try:
+            result = await super().on_tool_call(tool_call)
+            mcp_logger.info(f"✅ Tool result: {result}")
+            return result
+        except Exception as e:
+            mcp_logger.error(f"❌ Tool call failed: {e}")
+            raise
 
 
 async def entrypoint(ctx: agents.JobContext):
@@ -119,7 +140,7 @@ async def entrypoint(ctx: agents.JobContext):
         # Validate required environment variables
         required_env_vars = [
             "AZURE_DEPLOYMENT",
-            "AZURE_OPENAI_ENDPOINT", 
+            "AZURE_OPENAI_ENDPOINT",
             "AZURE_OPENAI_API_KEY",
             "OPENAI_API_VERSION",
             "DEEPGRAM_API_KEY",
@@ -137,6 +158,22 @@ async def entrypoint(ctx: agents.JobContext):
         # Get MCP Toolbox URL from environment or use default for Docker Compose
         toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000")
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
+
+        # Test MCP connection before creating session
+        try:
+            import aiohttp
+            async with aiohttp.ClientSession() as http_session:
+                async with http_session.get(f"{toolbox_url}/health") as response:
+                    if response.status == 200:
+                        logger.info("✅ MCP Toolbox connection test successful")
+                    else:
+                        logger.warning(f"⚠️ MCP Toolbox health check returned status: {response.status}")
+        except Exception as e:
+            logger.error(f"❌ MCP Toolbox connection test failed: {e}")
+
+        # Create MCP server with detailed logging
+        mcp_server = mcp.MCPServerHTTP(toolbox_url)
+        logger.info(f"✅ Created MCP server instance for: {toolbox_url}")
 
         session = AgentSession(
             llm=openai.LLM.with_azure(
@@ -159,22 +196,34 @@ async def entrypoint(ctx: agents.JobContext):
             ),
             vad=silero.VAD.load(),
             # Use LiveKit's native MCP support
-            mcp_servers=[
-                mcp.MCPServerHTTP(toolbox_url)
-            ]
+            mcp_servers=[mcp_server]
         )
 
-        logger.info("Agent session configured successfully with MCP integration")
+        logger.info("✅ Agent session configured successfully with MCP integration")
+
+        # Create agent with enhanced logging
+        agent = VolunteerAssistant()
+        logger.info("✅ VolunteerAssistant agent created")
 
         await session.start(
             room=ctx.room,
-            agent=VolunteerAssistant(),
+            agent=agent,
             room_input_options=RoomInputOptions(
                 noise_cancellation=noise_cancellation.BVC(),
             ),
         )
 
-        logger.info("Agent session started, generating initial greeting")
+        logger.info("✅ Agent session started successfully")
+
+        # Log available MCP tools
+        try:
+            # Get tools from MCP server
+            tools_info = await mcp_server.list_tools()
+            logger.info(f"📋 Available MCP tools: {len(tools_info)} tools found")
+            for tool in tools_info:
+                logger.info(f"  🔧 Tool: {tool.name} - {tool.description}")
+        except Exception as e:
+            logger.error(f"❌ Failed to list MCP tools: {e}")
 
         await session.generate_reply(
             instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people in Ghana find volunteers.
@@ -184,10 +233,10 @@ async def entrypoint(ctx: agents.JobContext):
             Ask gently what kind of help they are looking for today, and reassure them that you will take your time to find the right volunteer for them."""
         )
 
-        logger.info("Initial greeting generated successfully")
+        logger.info("✅ Initial greeting generated successfully")
 
     except Exception as e:
-        logger.error(f"Error in agent entrypoint: {e}")
+        logger.error(f"❌ Error in agent entrypoint: {e}")
         raise
 
 
