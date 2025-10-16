@@ -1,0 +1,15 @@
+# Use the official MCP Toolbox image as base
+FROM us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.16.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy configuration files into the image
+COPY tools.yaml /tools.yaml
+COPY volunteers.db /volunteers.db
+
+# Expose port
+EXPOSE 5000
+
+# The base image already has the toolbox binary, so we just need to set the command
+# Command will be overridden in docker-compose.yaml

@@ -1,7 +1,7 @@
 sources:
   volunteers-db:
     kind: "sqlite"
-    database: "/app/volunteers.db"
+    database: "/volunteers.db"
 
 tools:
   search-volunteers-by-skills:

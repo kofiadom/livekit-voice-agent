@@ -2,13 +2,12 @@ version: '3.9'
 
 services:
   mcp-toolbox:
-    image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.16.0
+    build:
+      context: .
+      dockerfile: Dockerfile-toolbox
     ports:
       - "5001:5000"
-    volumes:
-      - ./tools.yaml:/app/tools.yaml:ro
-      - ./volunteers.db:/app/volunteers.db:ro
-    command: ["--tools-file", "/app/tools.yaml", "--address", "0.0.0.0"]
+    command: ["/toolbox", "--tools-file", "/tools.yaml", "--address", "0.0.0.0"]
     environment:
       - TOOLBOX_PORT=5000
       - TOOLBOX_HOST=0.0.0.0
