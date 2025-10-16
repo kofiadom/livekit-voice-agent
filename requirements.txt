@@ -1,5 +1,5 @@
-# LiveKit Agent Dependencies
-livekit-agents[codecs,images,openai,silero]
+# LiveKit Agent Dependencies with MCP support
+livekit-agents[codecs,images,openai,silero,mcp]
 livekit-plugins-deepgram
 livekit-plugins-openai
 livekit-plugins-silero
