@@ -5,106 +5,71 @@ sources:
 
 tools:
   search-volunteers-by-skills:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Search for volunteers based on their skills (e.g., cooking, companionship, medication_reminders, transportation)
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Search for volunteers based on their skills (e.g., cooking, companionship, medication_reminders, transportation)"
     parameters:
-      - name: skill
-        type: string
-        description: The skill to search for (e.g., cooking, companionship, transportation)
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_status,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE skills LIKE '%' || $1 || '%'
-      AND availability_status != 'unavailable'
-      ORDER BY experience_years DESC;
+      - name: "skill"
+        type: "string"
+        description: "The skill to search for (e.g., cooking, companionship, transportation)"
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE skills LIKE '%' || $1 || '%' AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   search-volunteers-by-location:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Find volunteers in a specific location or area near the elderly person
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Find volunteers in a specific location or area near the elderly person"
     parameters:
-      - name: location
-        type: string
-        description: The location to search for (e.g., Accra, Kumasi, Tema)
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_status,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE location LIKE '%' || $1 || '%'
-      ORDER BY availability_status, experience_years DESC;
+      - name: "location"
+        type: "string"
+        description: "The location to search for (e.g., Accra, Kumasi, Tema)"
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE location LIKE '%' || $1 || '%' ORDER BY availability_status, experience_years DESC"
 
   get-available-volunteers:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Get all volunteers who are currently available to help elderly people
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Get all volunteers who are currently available to help elderly people"
     parameters: []
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_schedule,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE availability_status = 'available'
-      ORDER BY experience_years DESC;
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_schedule, experience_years, languages, transportation, notes FROM volunteers WHERE availability_status = 'available' ORDER BY experience_years DESC"
 
   get-volunteer-by-id:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Get detailed information about a specific volunteer
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Get detailed information about a specific volunteer"
     parameters:
-      - name: volunteer_id
-        type: integer
-        description: The ID of the volunteer to retrieve
-    statement: |
-      SELECT * FROM volunteers WHERE id = $1;
+      - name: "volunteer_id"
+        type: "integer"
+        description: "The ID of the volunteer to retrieve"
+    statement: "SELECT * FROM volunteers WHERE id = $1"
 
   get-volunteers-by-transport:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Find volunteers with specific transportation method to help elderly people
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Find volunteers with specific transportation method to help elderly people"
     parameters:
-      - name: transport_type
-        type: string
-        description: Transportation type (car, public_transport, walking, bicycle)
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_status,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE transportation = $1
-      AND availability_status != 'unavailable'
-      ORDER BY experience_years DESC;
+      - name: "transport_type"
+        type: "string"
+        description: "Transportation type (car, public_transport, walking, bicycle)"
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE transportation = $1 AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   get-experienced-volunteers:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Find volunteers with minimum years of experience helping elderly people
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Find volunteers with minimum years of experience helping elderly people"
     parameters:
-      - name: min_experience
-        type: integer
-        description: Minimum years of experience required (default: 5)
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_status,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE experience_years >= $1
-      AND availability_status != 'unavailable'
-      ORDER BY experience_years DESC;
+      - name: "min_experience"
+        type: "integer"
+        description: "Minimum years of experience required"
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE experience_years >= $1 AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   search-volunteers-by-language:
-    kind: sqlite-sql
-    source: volunteers-db
-    description: Find volunteers who speak a specific language preferred by elderly people
+    kind: "sqlite-sql"
+    source: "volunteers-db"
+    description: "Find volunteers who speak a specific language preferred by elderly people"
     parameters:
-      - name: language
-        type: string
-        description: The language to search for (e.g., English, Twi, Ga, Hausa)
-    statement: |
-      SELECT id, name, age, location, phone, email, skills, availability_status,
-             experience_years, languages, transportation, notes
-      FROM volunteers
-      WHERE languages LIKE '%' || $1 || '%'
-      AND availability_status != 'unavailable'
-      ORDER BY experience_years DESC;
+      - name: "language"
+        type: "string"
+        description: "The language to search for (e.g., English, Twi, Ga, Hausa)"
+    statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE languages LIKE '%' || $1 || '%' AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
 toolsets:
   elderly_user:
