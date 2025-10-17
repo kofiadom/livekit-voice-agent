@@ -115,16 +115,21 @@ class VolunteerAssistant(Agent):
         )
     
     async def on_tool_call(self, tool_call):
-        """Log all tool calls for debugging"""
-        mcp_logger.info(f"🔧 Tool called: {tool_call.name}")
-        mcp_logger.info(f"📝 Tool arguments: {tool_call.arguments}")
+        """Log all tool calls for debugging with enhanced emojis"""
+        mcp_logger.info(f"🚀 ===== MCP TOOL CALL START =====")
+        mcp_logger.info(f"🔧 Tool Name: {tool_call.name}")
+        mcp_logger.info(f"📝 Arguments: {tool_call.arguments}")
+        mcp_logger.info(f"🆔 Call ID: {getattr(tool_call, 'id', 'N/A')}")
         
         try:
             result = await super().on_tool_call(tool_call)
-            mcp_logger.info(f"✅ Tool result: {result}")
+            mcp_logger.info(f"✅ SUCCESS: Tool executed successfully")
+            mcp_logger.info(f"📊 Result Preview: {str(result)[:200]}{'...' if len(str(result)) > 200 else ''}")
+            mcp_logger.info(f"🏁 ===== MCP TOOL CALL END =====")
             return result
         except Exception as e:
-            mcp_logger.error(f"❌ Tool call failed: {e}")
+            mcp_logger.error(f"❌ FAILED: Tool call failed with error: {e}")
+            mcp_logger.error(f"🏁 ===== MCP TOOL CALL END (ERROR) =====")
             raise
 
 
