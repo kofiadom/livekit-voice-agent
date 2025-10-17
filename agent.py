@@ -156,7 +156,7 @@ async def entrypoint(ctx: agents.JobContext):
             raise ValueError(f"Missing environment variables: {missing_vars}")
 
         # Get MCP Toolbox URL from environment or use default for Docker Compose
-        toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000")
+        toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000/mcp")
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
 
         # Test MCP connection before creating session
