@@ -10,3 +10,11 @@ wheels/
 .venv
 
 .env
+
+# Google Cloud OAuth credentials - NEVER commit these!
+gcp-oauth.keys.json
+client_secret_*.json
+*.keys.json
+
+# Calendar authentication tokens
+.config/google-calendar-mcp/

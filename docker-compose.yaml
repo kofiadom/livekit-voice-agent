@@ -14,6 +14,27 @@ services:
     networks:
       - default
 
+  google-calendar-mcp:
+    image: node:18-alpine
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - TRANSPORT=http
+      - HOST=0.0.0.0
+      - PORT=3000
+      - GOOGLE_OAUTH_CREDENTIALS=/app/gcp-oauth.keys.json
+    volumes:
+      - ./gcp-oauth.keys.json:/app/gcp-oauth.keys.json:ro
+      - google-calendar-tokens:/root/.config/google-calendar-mcp
+    command: >
+      sh -c "
+        npm install -g @cocal/google-calendar-mcp &&
+        npx @cocal/google-calendar-mcp
+      "
+    networks:
+      - default
+
   livekit-agent:
     build:
       context: .
@@ -34,10 +55,15 @@ services:
       - AZURE_TTS_API_VERSION=${AZURE_TTS_API_VERSION}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - TOOLBOX_URL=http://mcp-toolbox:5000/mcp
+      - GOOGLE_CALENDAR_URL=http://google-calendar-mcp:3000
     depends_on:
       - mcp-toolbox
+      - google-calendar-mcp
     networks:
       - default
+
+volumes:
+  google-calendar-tokens:
 
 networks:
   default:

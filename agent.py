@@ -61,11 +61,11 @@ class VolunteerAssistant(Agent):
     
     def __init__(self):
         super().__init__(
-            instructions="""You are a caring and patient voice AI assistant helping elderly people in Ghana find volunteers to assist them with their daily needs.
+            instructions="""You are a caring and patient voice AI assistant helping elderly people in Ghana find volunteers to assist them with their daily needs and schedule appointments with them.
             
             You speak to elderly users with respect, warmth, and patience. You understand they may need extra time and clear explanations.
             
-            **IMPORTANT: You MUST use the available MCP tools to search for volunteers. Always call the appropriate tool when a user asks for help.**
+            **IMPORTANT: You MUST use the available MCP tools to search for volunteers and manage calendar appointments. Always call the appropriate tool when a user asks for help.**
             
             **Available Tools to Help Find Volunteers:**
             - search-volunteers-by-skills: Find volunteers who can help with specific tasks (cooking, companionship, transportation, medication reminders, light housekeeping, etc.)
@@ -75,6 +75,15 @@ class VolunteerAssistant(Agent):
             - get-experienced-volunteers: Find volunteers with many years of experience helping elderly people
             - search-volunteers-by-language: Find volunteers who speak your preferred language (English, Twi, Ga, Hausa, etc.)
             - get-volunteer-by-id: Get more details about a specific volunteer
+            
+            **Available Calendar Tools for Scheduling:**
+            - list-calendars: Show available calendars for scheduling
+            - create-event: Schedule appointments with volunteers (include volunteer name, service type, date, time, location)
+            - list-events: Show upcoming appointments
+            - search-events: Find specific appointments
+            - update-event: Change appointment details
+            - delete-event: Cancel appointments
+            - get-freebusy: Check when you and volunteers are available
             
             **Your Communication Style:**
             - Speak slowly, clearly, and patiently
@@ -92,6 +101,15 @@ class VolunteerAssistant(Agent):
             - Share what languages they speak
             - Explain how they can travel to help (car, public transport, etc.)
             - Include their phone number so they can contact them
+            - **OFFER TO SCHEDULE AN APPOINTMENT** with the volunteer
+            
+            **When scheduling appointments:**
+            - Ask for preferred date and time in a gentle way
+            - Confirm the type of help needed (cooking, companionship, etc.)
+            - Include the volunteer's name and contact information in the appointment
+            - Set the location (usually the elderly person's home)
+            - Create clear appointment titles like "Cooking Help with Sarah Johnson"
+            - Always confirm the appointment details before creating it
             
             **Common needs you help with:**
             - Finding someone to cook meals or help with cooking
@@ -100,18 +118,22 @@ class VolunteerAssistant(Agent):
             - Finding someone to remind about medications
             - Finding help with light housekeeping or cleaning
             - Finding someone who speaks their local language
+            - **Scheduling regular or one-time appointments with volunteers**
             
-            **Your approach:**
+            **Your enhanced approach:**
             1. Listen carefully to what kind of help they need
             2. Ask gentle questions to understand their location and preferences
             3. **ALWAYS use the MCP tools to search the volunteer database**
             4. Present 2-3 good volunteer options clearly and simply
-            5. Offer to find more volunteers if they want different options
-            6. Be encouraging and reassuring throughout
+            5. **ASK IF THEY WANT TO SCHEDULE AN APPOINTMENT** with any volunteer
+            6. If they want to schedule, use calendar tools to create the appointment
+            7. Confirm all appointment details and provide a summary
+            8. Offer to find more volunteers or schedule additional appointments if needed
+            9. Be encouraging and reassuring throughout
             
-            **CRITICAL: When a user asks for help finding volunteers, you MUST call one of the MCP tools. Do not provide generic responses without searching the database first.**
+            **CRITICAL: When a user asks for help finding volunteers, you MUST call the volunteer search MCP tools. When they want to schedule appointments, you MUST use the calendar MCP tools. Do not provide generic responses without using the appropriate tools first.**
             
-            Remember: You are helping elderly people find caring volunteers to assist them. Be patient, kind, and thorough in your help.""",
+            Remember: You are helping elderly people find caring volunteers AND schedule appointments with them. Be patient, kind, and thorough in your help. Always offer to schedule appointments after finding suitable volunteers.""",
         )
     
     async def on_tool_call(self, tool_call):
@@ -160,13 +182,18 @@ async def entrypoint(ctx: agents.JobContext):
             logger.error(f"Missing required environment variables: {missing_vars}")
             raise ValueError(f"Missing environment variables: {missing_vars}")
 
-        # Get MCP Toolbox URL from environment or use default for Docker Compose
+        # Get MCP server URLs from environment
         toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000/mcp")
+        calendar_url = os.getenv("GOOGLE_CALENDAR_URL", "http://google-calendar-mcp:3000")
+        
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
+        logger.info(f"Connecting to Google Calendar MCP at: {calendar_url}")
 
-        # Test MCP connection before creating session
+        # Test MCP connections before creating session
+        import aiohttp
+        
+        # Test Toolbox connection
         try:
-            import aiohttp
             async with aiohttp.ClientSession() as http_session:
                 async with http_session.get(f"{toolbox_url}/health") as response:
                     if response.status == 200:
@@ -176,9 +203,23 @@ async def entrypoint(ctx: agents.JobContext):
         except Exception as e:
             logger.error(f"❌ MCP Toolbox connection test failed: {e}")
 
-        # Create MCP server with detailed logging
-        mcp_server = mcp.MCPServerHTTP(toolbox_url)
-        logger.info(f"✅ Created MCP server instance for: {toolbox_url}")
+        # Test Calendar connection
+        try:
+            async with aiohttp.ClientSession() as http_session:
+                async with http_session.get(f"{calendar_url}/health") as response:
+                    if response.status == 200:
+                        logger.info("✅ Google Calendar MCP connection test successful")
+                    else:
+                        logger.warning(f"⚠️ Google Calendar MCP health check returned status: {response.status}")
+        except Exception as e:
+            logger.error(f"❌ Google Calendar MCP connection test failed: {e}")
+
+        # Create MCP servers with detailed logging
+        mcp_toolbox_server = mcp.MCPServerHTTP(toolbox_url)
+        mcp_calendar_server = mcp.MCPServerHTTP(calendar_url)
+        
+        logger.info(f"✅ Created MCP Toolbox server instance for: {toolbox_url}")
+        logger.info(f"✅ Created Google Calendar MCP server instance for: {calendar_url}")
 
         session = AgentSession(
             llm=openai.LLM.with_azure(
@@ -200,8 +241,8 @@ async def entrypoint(ctx: agents.JobContext):
                 api_version=os.getenv("AZURE_TTS_API_VERSION"),
             ),
             vad=silero.VAD.load(),
-            # Use LiveKit's native MCP support
-            mcp_servers=[mcp_server]
+            # Use LiveKit's native MCP support with both servers
+            mcp_servers=[mcp_toolbox_server, mcp_calendar_server]
         )
 
         logger.info("✅ Agent session configured successfully with MCP integration")
@@ -220,25 +261,42 @@ async def entrypoint(ctx: agents.JobContext):
 
         logger.info("✅ Agent session started successfully")
 
-        # Log available MCP tools
+        # Log available MCP tools from both servers
+        total_tools = 0
+        
+        # List tools from MCP Toolbox
         try:
-            # Get tools from MCP server
-            tools_info = await mcp_server.list_tools()
-            logger.info(f"📋 Available MCP tools: {len(tools_info)} tools found")
-            for tool in tools_info:
+            toolbox_tools = await mcp_toolbox_server.list_tools()
+            logger.info(f"📋 MCP Toolbox tools: {len(toolbox_tools)} tools found")
+            total_tools += len(toolbox_tools)
+            for tool in toolbox_tools:
                 # Handle different tool object types
                 if hasattr(tool, 'name'):
-                    logger.info(f"  🔧 Tool: {tool.name} - {getattr(tool, 'description', 'No description')}")
+                    logger.info(f"  🔧 Volunteer Tool: {tool.name} - {getattr(tool, 'description', 'No description')}")
                 elif hasattr(tool, '__name__'):
-                    logger.info(f"  🔧 Tool: {tool.__name__} - Function tool")
+                    logger.info(f"  🔧 Volunteer Tool: {tool.__name__} - Function tool")
                 else:
-                    logger.info(f"  🔧 Tool: {str(tool)} - Unknown tool type")
+                    logger.info(f"  🔧 Volunteer Tool: {str(tool)} - Unknown tool type")
         except Exception as e:
-            logger.error(f"❌ Failed to list MCP tools: {e}")
-            logger.debug(f"Tools info type: {type(tools_info) if 'tools_info' in locals() else 'undefined'}")
-            if 'tools_info' in locals() and tools_info:
-                logger.debug(f"First tool type: {type(tools_info[0])}")
-                logger.debug(f"First tool attributes: {dir(tools_info[0])}")
+            logger.error(f"❌ Failed to list MCP Toolbox tools: {e}")
+        
+        # List tools from Google Calendar MCP
+        try:
+            calendar_tools = await mcp_calendar_server.list_tools()
+            logger.info(f"📅 Google Calendar MCP tools: {len(calendar_tools)} tools found")
+            total_tools += len(calendar_tools)
+            for tool in calendar_tools:
+                # Handle different tool object types
+                if hasattr(tool, 'name'):
+                    logger.info(f"  📅 Calendar Tool: {tool.name} - {getattr(tool, 'description', 'No description')}")
+                elif hasattr(tool, '__name__'):
+                    logger.info(f"  📅 Calendar Tool: {tool.__name__} - Function tool")
+                else:
+                    logger.info(f"  📅 Calendar Tool: {str(tool)} - Unknown tool type")
+        except Exception as e:
+            logger.error(f"❌ Failed to list Google Calendar MCP tools: {e}")
+        
+        logger.info(f"🎯 Total MCP tools available: {total_tools}")
 
         await session.generate_reply(
             instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people in Ghana find volunteers.
