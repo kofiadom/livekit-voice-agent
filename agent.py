@@ -221,9 +221,19 @@ async def entrypoint(ctx: agents.JobContext):
             tools_info = await mcp_server.list_tools()
             logger.info(f"📋 Available MCP tools: {len(tools_info)} tools found")
             for tool in tools_info:
-                logger.info(f"  🔧 Tool: {tool.name} - {tool.description}")
+                # Handle different tool object types
+                if hasattr(tool, 'name'):
+                    logger.info(f"  🔧 Tool: {tool.name} - {getattr(tool, 'description', 'No description')}")
+                elif hasattr(tool, '__name__'):
+                    logger.info(f"  🔧 Tool: {tool.__name__} - Function tool")
+                else:
+                    logger.info(f"  🔧 Tool: {str(tool)} - Unknown tool type")
         except Exception as e:
             logger.error(f"❌ Failed to list MCP tools: {e}")
+            logger.debug(f"Tools info type: {type(tools_info) if 'tools_info' in locals() else 'undefined'}")
+            if 'tools_info' in locals() and tools_info:
+                logger.debug(f"First tool type: {type(tools_info[0])}")
+                logger.debug(f"First tool attributes: {dir(tools_info[0])}")
 
         await session.generate_reply(
             instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people in Ghana find volunteers.
