@@ -15,29 +15,29 @@ services:
       - default
 
   google-calendar-mcp:
-    image: node:18-alpine
-    working_dir: /app
+    build:
+      context: https://github.com/nspady/google-calendar-mcp.git
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - GOOGLE_OAUTH_CREDENTIALS=/app/gcp-oauth.keys.json
+      - TRANSPORT=http
+      - HOST=0.0.0.0
+      - PORT=3000
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
-      - NODE_ENV=production
     volumes:
-      - google-calendar-tokens:/root/.config/google-calendar-mcp
+      - google-calendar-tokens:/home/nodejs/.config/google-calendar-mcp
     command: >
       sh -c "
-        echo 'Creating OAuth credentials file...' &&
+        echo 'Creating OAuth credentials file from environment variables...' &&
         echo '{\"installed\":{\"client_id\":\"'$GOOGLE_CLIENT_ID'\",\"project_id\":\"'$GOOGLE_PROJECT_ID'\",\"auth_uri\":\"https://accounts.google.com/o/oauth2/auth\",\"token_uri\":\"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\":\"https://www.googleapis.com/oauth2/v1/certs\",\"client_secret\":\"'$GOOGLE_CLIENT_SECRET'\",\"redirect_uris\":[\"http://localhost\"]}}' > /app/gcp-oauth.keys.json &&
-        echo 'Installing Google Calendar MCP...' &&
-        npm install -g @cocal/google-calendar-mcp &&
-        echo 'Starting Google Calendar MCP Server...' &&
-        echo 'OAuth credentials file created at /app/gcp-oauth.keys.json' &&
-        echo 'Server starting in HTTP transport mode for LiveKit compatibility' &&
-        echo 'Available at http://0.0.0.0:3000' &&
-        TRANSPORT=http HOST=0.0.0.0 PORT=3000 npx @cocal/google-calendar-mcp
+        echo 'Starting Google Calendar MCP Server in HTTP mode...' &&
+        echo 'OAuth credentials: /app/gcp-oauth.keys.json' &&
+        echo 'Transport: HTTP on 0.0.0.0:3000' &&
+        echo 'Tokens will be stored in: /home/nodejs/.config/google-calendar-mcp' &&
+        npm start
       "
     networks:
       - default
