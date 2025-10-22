@@ -90,10 +90,17 @@ All services have health checks that Coolify will monitor:
 - **LiveKit Agent**: `http://livekit-agent:8081/health`
 
 ### 2. Complete Google Calendar Authentication
-1. Check Google Calendar MCP logs in Coolify dashboard
-2. Look for authentication URL in the logs
-3. Open the URL in your browser and complete OAuth flow
+
+**📋 See [COOLIFY_AUTHENTICATION_GUIDE.md](COOLIFY_AUTHENTICATION_GUIDE.md) for detailed authentication steps and troubleshooting.**
+
+**Quick Steps:**
+1. Access the `google-calendar-mcp` container terminal in Coolify
+2. Run: `npx @cocal/google-calendar-mcp auth`
+3. Copy the OAuth URL and complete authentication in browser
 4. Grant calendar permissions
+5. Restart services if needed
+
+**If you encounter authentication errors, follow the comprehensive troubleshooting guide.**
 
 ### 3. Test Agent Connection
 1. Connect your React Native app to the deployed voice agent
