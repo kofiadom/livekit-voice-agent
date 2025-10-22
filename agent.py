@@ -19,6 +19,14 @@ from google_calendar_tools import (
     get_freebusy
 )
 
+# Import our custom DateTime tools
+from datetime_tools import (
+    get_current_datetime,
+    get_current_date,
+    get_current_time,
+    get_day_of_week
+)
+
 load_dotenv()
 
 # Configure logging
@@ -72,7 +80,7 @@ class VolunteerAssistant(Agent):
     
     def __init__(self):
         super().__init__(
-            # Add our custom Google Calendar tools to the agent
+            # Add our custom Google Calendar and DateTime tools to the agent
             tools=[
                 list_calendars,
                 create_event,
@@ -80,7 +88,11 @@ class VolunteerAssistant(Agent):
                 search_events,
                 update_event,
                 delete_event,
-                get_freebusy
+                get_freebusy,
+                get_current_datetime,
+                get_current_date,
+                get_current_time,
+                get_day_of_week
             ],
             instructions="""You are a caring and patient voice AI assistant helping elderly people across the United States find volunteers to assist them with their daily needs and schedule appointments with them.
             
@@ -105,6 +117,12 @@ class VolunteerAssistant(Agent):
             - update-event: Change appointment details
             - delete-event: Cancel appointments
             - get-freebusy: Check when you and volunteers are available
+            
+            **Available DateTime Tools for Time Information:**
+            - get-current-datetime: Get the current date and time in a user-friendly format
+            - get-current-date: Get just today's date
+            - get-current-time: Get just the current time
+            - get-day-of-week: Get what day of the week it is today
             
             **Your Communication Style:**
             - Speak slowly, clearly, and patiently
@@ -303,6 +321,19 @@ async def entrypoint(ctx: agents.JobContext):
         for tool in calendar_tools:
             tool_name = getattr(tool, '__name__', str(tool))
             logger.info(f"  📅 Calendar Tool: {tool_name} - Custom LiveKit function tool")
+        
+        # List custom DateTime tools
+        datetime_tools = [
+            get_current_datetime,
+            get_current_date,
+            get_current_time,
+            get_day_of_week
+        ]
+        logger.info(f"🕐 Custom DateTime tools: {len(datetime_tools)} tools found")
+        total_tools += len(datetime_tools)
+        for tool in datetime_tools:
+            tool_name = getattr(tool, '__name__', str(tool))
+            logger.info(f"  🕐 DateTime Tool: {tool_name} - Custom LiveKit function tool")
         
         logger.info(f"🎯 Total tools available: {total_tools} (MCP + Custom)")
 
