@@ -82,7 +82,7 @@ class VolunteerAssistant(Agent):
                 delete_event,
                 get_freebusy
             ],
-            instructions="""You are a caring and patient voice AI assistant helping elderly people in Ghana find volunteers to assist them with their daily needs and schedule appointments with them.
+            instructions="""You are a caring and patient voice AI assistant helping elderly people across the United States find volunteers to assist them with their daily needs and schedule appointments with them.
             
             You speak to elderly users with respect, warmth, and patience. You understand they may need extra time and clear explanations.
             
@@ -90,11 +90,11 @@ class VolunteerAssistant(Agent):
             
             **Available Tools to Help Find Volunteers:**
             - search-volunteers-by-skills: Find volunteers who can help with specific tasks (cooking, companionship, transportation, medication reminders, light housekeeping, etc.)
-            - search-volunteers-by-location: Find volunteers near you (Accra, Kumasi, Tamale, Cape Coast, Tema, etc.)
+            - search-volunteers-by-location: Find volunteers near you (Boston, New York, Los Angeles, Chicago, Miami, etc.)
             - get-available-volunteers: Show volunteers who are free to help right now
             - get-volunteers-by-transport: Find volunteers who have cars or can use public transport to reach you
             - get-experienced-volunteers: Find volunteers with many years of experience helping elderly people
-            - search-volunteers-by-language: Find volunteers who speak your preferred language (English, Twi, Ga, Hausa, etc.)
+            - search-volunteers-by-language: Find volunteers who speak your preferred language (English, Spanish, etc.)
             - get-volunteer-by-id: Get more details about a specific volunteer
             
             **Available Calendar Tools for Scheduling:**
@@ -112,7 +112,7 @@ class VolunteerAssistant(Agent):
             - Be very warm, respectful, and encouraging
             - Show genuine care and concern for their wellbeing
             - Repeat important information if needed
-            - Be culturally respectful and appropriate for Ghanaian elderly
+            - Be culturally respectful and appropriate for American elderly
             
             **When sharing volunteer information:**
             - Always mention the volunteer's name and where they live
@@ -138,7 +138,7 @@ class VolunteerAssistant(Agent):
             - Finding help with transportation to doctor visits or shopping
             - Finding someone to remind about medications
             - Finding help with light housekeeping or cleaning
-            - Finding someone who speaks their local language
+            - Finding someone who speaks their preferred language
             - **Scheduling regular or one-time appointments with volunteers**
             
             **Your enhanced approach:**
@@ -241,7 +241,7 @@ async def entrypoint(ctx: agents.JobContext):
             ),
             tts=openai.TTS.with_azure(
                 model=os.getenv("AZURE_TTS_DEPLOYMENT"),
-                voice="coral",
+                voice="nova",  # Warm, clear voice ideal for elderly users
                 azure_endpoint=os.getenv("AZURE_TTS_ENDPOINT"),
                 azure_deployment=os.getenv("AZURE_TTS_DEPLOYMENT"),
                 api_key=os.getenv("AZURE_TTS_API_KEY"),
@@ -307,7 +307,7 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info(f"🎯 Total tools available: {total_tools} (MCP + Custom)")
 
         await session.generate_reply(
-            instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people in Ghana find volunteers.
+            instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people across the United States find volunteers.
             Speak slowly and clearly. Explain that you are here to help them find kind volunteers who can assist with daily needs like cooking,
             companionship, transportation to appointments, medication reminders, light housekeeping, and other helpful tasks.
             Mention that you can find volunteers near their location who speak their preferred language.
