@@ -13,8 +13,6 @@ services:
       - TOOLBOX_HOST=0.0.0.0
     networks:
       - default
-    networks:
-      - default
 
   livekit-agent:
     build:
