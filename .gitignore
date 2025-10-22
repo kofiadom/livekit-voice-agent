@@ -18,3 +18,4 @@ client_secret_*.json
 
 # Calendar authentication tokens
 .config/google-calendar-mcp/
+google_calendar_token.json

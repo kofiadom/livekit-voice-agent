@@ -13,35 +13,6 @@ services:
       - TOOLBOX_HOST=0.0.0.0
     networks:
       - default
-
-  google-calendar-mcp:
-    build:
-      context: https://github.com/nspady/google-calendar-mcp.git
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-      - "3500:3500"
-    environment:
-      - TRANSPORT=http
-      - HOST=0.0.0.0
-      - PORT=3000
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
-    volumes:
-      - google-calendar-tokens:/home/nodejs/.config/google-calendar-mcp
-    command: >
-      sh -c "
-        echo 'Creating OAuth credentials file for Web application...' &&
-        echo '{\"web\":{\"client_id\":\"'$GOOGLE_CLIENT_ID'\",\"project_id\":\"'$GOOGLE_PROJECT_ID'\",\"auth_uri\":\"https://accounts.google.com/o/oauth2/auth\",\"token_uri\":\"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\":\"https://www.googleapis.com/oauth2/v1/certs\",\"client_secret\":\"'$GOOGLE_CLIENT_SECRET'\",\"redirect_uris\":[\"http://localhost:3500/oauth2callback\"]}}' > /app/gcp-oauth.keys.json &&
-        echo 'Starting Google Calendar MCP Server in HTTP mode...' &&
-        echo 'OAuth credentials: /app/gcp-oauth.keys.json (Web application format)' &&
-        echo 'Transport: HTTP on 0.0.0.0:3000' &&
-        echo 'OAuth callback server will run on port 3500' &&
-        echo 'Redirect URI: http://localhost:3500/oauth2callback' &&
-        echo 'Tokens will be stored in: /home/nodejs/.config/google-calendar-mcp' &&
-        npm start
-      "
     networks:
       - default
 
@@ -65,15 +36,16 @@ services:
       - AZURE_TTS_API_VERSION=${AZURE_TTS_API_VERSION}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - TOOLBOX_URL=http://mcp-toolbox:5000/mcp
-      - GOOGLE_CALENDAR_URL=http://google-calendar-mcp:3000
+      # Google Calendar OAuth credentials
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
     depends_on:
       - mcp-toolbox
-      - google-calendar-mcp
     networks:
       - default
 
-volumes:
-  google-calendar-tokens:
 
 networks:
   default:

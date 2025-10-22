@@ -8,6 +8,17 @@ from livekit.plugins import deepgram
 from livekit.agents import AgentSession, Agent, RoomInputOptions, mcp
 from livekit.plugins import noise_cancellation, silero
 
+# Import our custom Google Calendar tools
+from google_calendar_tools import (
+    list_calendars,
+    create_event,
+    list_events,
+    search_events,
+    update_event,
+    delete_event,
+    get_freebusy
+)
+
 load_dotenv()
 
 # Configure logging
@@ -61,6 +72,16 @@ class VolunteerAssistant(Agent):
     
     def __init__(self):
         super().__init__(
+            # Add our custom Google Calendar tools to the agent
+            tools=[
+                list_calendars,
+                create_event,
+                list_events,
+                search_events,
+                update_event,
+                delete_event,
+                get_freebusy
+            ],
             instructions="""You are a caring and patient voice AI assistant helping elderly people in Ghana find volunteers to assist them with their daily needs and schedule appointments with them.
             
             You speak to elderly users with respect, warmth, and patience. You understand they may need extra time and clear explanations.
@@ -184,10 +205,9 @@ async def entrypoint(ctx: agents.JobContext):
 
         # Get MCP server URLs from environment
         toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000/mcp")
-        calendar_url = os.getenv("GOOGLE_CALENDAR_URL", "http://google-calendar-mcp:3000/sse")
         
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
-        logger.info(f"Connecting to Google Calendar MCP at: {calendar_url}")
+        logger.info("Using custom Google Calendar tools (no MCP server needed)")
 
         # Test MCP connections before creating session
         import aiohttp
@@ -203,23 +223,10 @@ async def entrypoint(ctx: agents.JobContext):
         except Exception as e:
             logger.error(f"❌ MCP Toolbox connection test failed: {e}")
 
-        # Test Calendar connection
-        try:
-            async with aiohttp.ClientSession() as http_session:
-                async with http_session.get(f"{calendar_url}/health") as response:
-                    if response.status == 200:
-                        logger.info("✅ Google Calendar MCP connection test successful")
-                    else:
-                        logger.warning(f"⚠️ Google Calendar MCP health check returned status: {response.status}")
-        except Exception as e:
-            logger.error(f"❌ Google Calendar MCP connection test failed: {e}")
-
         # Create MCP servers with detailed logging
         mcp_toolbox_server = mcp.MCPServerHTTP(toolbox_url)
-        mcp_calendar_server = mcp.MCPServerHTTP(calendar_url)
         
         logger.info(f"✅ Created MCP Toolbox server instance for: {toolbox_url}")
-        logger.info(f"✅ Created Google Calendar MCP server instance for: {calendar_url}")
 
         session = AgentSession(
             llm=openai.LLM.with_azure(
@@ -241,8 +248,9 @@ async def entrypoint(ctx: agents.JobContext):
                 api_version=os.getenv("AZURE_TTS_API_VERSION"),
             ),
             vad=silero.VAD.load(),
-            # Use LiveKit's native MCP support with both servers
-            mcp_servers=[mcp_toolbox_server, mcp_calendar_server]
+            # Use LiveKit's native MCP support with toolbox server only
+            # Google Calendar tools are now integrated directly into the agent
+            mcp_servers=[mcp_toolbox_server]
         )
 
         logger.info("✅ Agent session configured successfully with MCP integration")
@@ -261,7 +269,7 @@ async def entrypoint(ctx: agents.JobContext):
 
         logger.info("✅ Agent session started successfully")
 
-        # Log available MCP tools from both servers
+        # Log available tools from MCP server and custom tools
         total_tools = 0
         
         # List tools from MCP Toolbox
@@ -280,23 +288,23 @@ async def entrypoint(ctx: agents.JobContext):
         except Exception as e:
             logger.error(f"❌ Failed to list MCP Toolbox tools: {e}")
         
-        # List tools from Google Calendar MCP
-        try:
-            calendar_tools = await mcp_calendar_server.list_tools()
-            logger.info(f"📅 Google Calendar MCP tools: {len(calendar_tools)} tools found")
-            total_tools += len(calendar_tools)
-            for tool in calendar_tools:
-                # Handle different tool object types
-                if hasattr(tool, 'name'):
-                    logger.info(f"  📅 Calendar Tool: {tool.name} - {getattr(tool, 'description', 'No description')}")
-                elif hasattr(tool, '__name__'):
-                    logger.info(f"  📅 Calendar Tool: {tool.__name__} - Function tool")
-                else:
-                    logger.info(f"  📅 Calendar Tool: {str(tool)} - Unknown tool type")
-        except Exception as e:
-            logger.error(f"❌ Failed to list Google Calendar MCP tools: {e}")
+        # List custom Google Calendar tools
+        calendar_tools = [
+            list_calendars,
+            create_event,
+            list_events,
+            search_events,
+            update_event,
+            delete_event,
+            get_freebusy
+        ]
+        logger.info(f"📅 Custom Google Calendar tools: {len(calendar_tools)} tools found")
+        total_tools += len(calendar_tools)
+        for tool in calendar_tools:
+            tool_name = getattr(tool, '__name__', str(tool))
+            logger.info(f"  📅 Calendar Tool: {tool_name} - Custom LiveKit function tool")
         
-        logger.info(f"🎯 Total MCP tools available: {total_tools}")
+        logger.info(f"🎯 Total tools available: {total_tools} (MCP + Custom)")
 
         await session.generate_reply(
             instructions="""Greet the elderly user very warmly and introduce yourself as a caring AI assistant who helps elderly people in Ghana find volunteers.
