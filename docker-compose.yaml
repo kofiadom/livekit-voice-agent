@@ -36,7 +36,6 @@ services:
       - AZURE_TTS_API_VERSION=${AZURE_TTS_API_VERSION}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - TOOLBOX_URL=http://mcp-toolbox:5000/mcp
-      # Google Calendar OAuth credentials
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
