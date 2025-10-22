@@ -184,7 +184,7 @@ async def entrypoint(ctx: agents.JobContext):
 
         # Get MCP server URLs from environment
         toolbox_url = os.getenv("TOOLBOX_URL", "http://mcp-toolbox:5000/mcp")
-        calendar_url = os.getenv("GOOGLE_CALENDAR_URL", "http://google-calendar-mcp:3000")
+        calendar_url = os.getenv("GOOGLE_CALENDAR_URL", "http://google-calendar-mcp:3000/sse")
         
         logger.info(f"Connecting to MCP Toolbox at: {toolbox_url}")
         logger.info(f"Connecting to Google Calendar MCP at: {calendar_url}")
