@@ -77,14 +77,25 @@ If authentication doesn't take effect immediately:
 2. Check that the OAuth credentials file was generated correctly
 3. Verify Google Calendar API is enabled in Google Cloud Console
 
-### Issue 3: "Invalid client" error during OAuth
+### Issue 3: Error 403: access_denied / "App not verified"
+**Cause**: OAuth consent screen configuration issue
+**Error Message**: "Voice_Agent has not completed the Google verification process"
+**Solution**: See **[GOOGLE_OAUTH_CONSENT_FIX.md](GOOGLE_OAUTH_CONSENT_FIX.md)** for complete fix
+
+**Quick Fix:**
+1. Go to Google Cloud Console → OAuth consent screen
+2. Add your email as a test user
+3. Wait 5-10 minutes for propagation
+4. Try authentication again
+
+### Issue 4: "Invalid client" error during OAuth
 **Cause**: Incorrect OAuth credentials
 **Solutions**:
 1. Verify `GOOGLE_CLIENT_ID` matches your Google Cloud Console credentials
 2. Ensure `GOOGLE_CLIENT_SECRET` is correct
 3. Check that `GOOGLE_PROJECT_ID` matches your Google Cloud project
 
-### Issue 4: Tokens not persisting
+### Issue 5: Tokens not persisting
 **Cause**: Volume mounting issues
 **Solution**: Ensure the `google-calendar-tokens` volume is properly mounted
 
