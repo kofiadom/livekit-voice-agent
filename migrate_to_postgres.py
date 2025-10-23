@@ -699,7 +699,7 @@ def main():
     """Main migration function"""
     print("\n" + "="*60)
     print("Volunteers Database Migration")
-    print("SQLite → PostgreSQL (Coolify)")
+    print("SQLite -> PostgreSQL (Coolify)")
     print("="*60 + "\n")
     
     # Step 1: Connect to PostgreSQL
