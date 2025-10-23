@@ -1,11 +1,15 @@
 sources:
   volunteers-db:
-    kind: "sqlite"
-    database: "/volunteers.db"
+    kind: "postgres"
+    host: "${DB_HOST}"
+    database: "${DB_NAME}"
+    user: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+    port: 5432
 
 tools:
   search-volunteers-by-skills:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Search for volunteers based on their skills (e.g., cooking, companionship, medication_reminders, transportation)"
     parameters:
@@ -15,7 +19,7 @@ tools:
     statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE skills LIKE '%' || $1 || '%' AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   search-volunteers-by-location:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Find volunteers in a specific location or area near the elderly person"
     parameters:
@@ -25,14 +29,14 @@ tools:
     statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE location LIKE '%' || $1 || '%' ORDER BY availability_status, experience_years DESC"
 
   get-available-volunteers:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Get all volunteers who are currently available to help elderly people"
     parameters: []
     statement: "SELECT id, name, age, location, phone, email, skills, availability_schedule, experience_years, languages, transportation, notes FROM volunteers WHERE availability_status = 'available' ORDER BY experience_years DESC"
 
   get-volunteer-by-id:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Get detailed information about a specific volunteer"
     parameters:
@@ -42,7 +46,7 @@ tools:
     statement: "SELECT * FROM volunteers WHERE id = $1"
 
   get-volunteers-by-transport:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Find volunteers with specific transportation method to help elderly people"
     parameters:
@@ -52,7 +56,7 @@ tools:
     statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE transportation = $1 AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   get-experienced-volunteers:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Find volunteers with minimum years of experience helping elderly people"
     parameters:
@@ -62,7 +66,7 @@ tools:
     statement: "SELECT id, name, age, location, phone, email, skills, availability_status, experience_years, languages, transportation, notes FROM volunteers WHERE experience_years >= $1 AND availability_status != 'unavailable' ORDER BY experience_years DESC"
 
   search-volunteers-by-language:
-    kind: "sqlite-sql"
+    kind: "postgres-sql"
     source: "volunteers-db"
     description: "Find volunteers who speak a specific language preferred by elderly people"
     parameters:

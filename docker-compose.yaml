@@ -11,6 +11,11 @@ services:
     environment:
       - TOOLBOX_PORT=5000
       - TOOLBOX_HOST=0.0.0.0
+      - DATABASE_URL=${POSTGRES_URL_INTERNAL}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     networks:
       - default
 
@@ -38,10 +43,17 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
       - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+      - DATABASE_URL=${POSTGRES_URL_INTERNAL}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       - mcp-toolbox
     networks:
       - default
+    external_links:
+      - ${DB_HOST}:${DB_HOST}
 
 
 networks:

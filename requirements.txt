@@ -20,3 +20,6 @@ google-api-python-client
 
 # DateTime tools dependencies
 pytz
+
+# PostgreSQL database adapter
+psycopg2-binary
