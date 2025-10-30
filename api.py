@@ -10,7 +10,10 @@ from datetime import datetime
 app = FastAPI(
     title="Volunteer API",
     description="REST API for accessing volunteer data from Postgres database",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Enable CORS for React Native
@@ -78,9 +81,27 @@ async def root():
         "endpoints": {
             "volunteers": "/api/volunteers",
             "volunteer_by_id": "/api/volunteers/{id}",
-            "health": "/health"
+            "health": "/health",
+            "docs": "/docs",
+            "redoc": "/redoc",
+            "openapi": "/openapi.json"
         }
     }
+
+@app.get("/openapi-test")
+async def openapi_test():
+    """Test endpoint to check if OpenAPI schema generation works"""
+    try:
+        from fastapi.openapi.utils import get_openapi
+        schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
+        return {"status": "success", "schema_keys": list(schema.keys())}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 @app.get("/health")
 async def health_check():

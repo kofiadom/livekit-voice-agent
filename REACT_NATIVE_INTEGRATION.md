@@ -16,7 +16,7 @@ The FastAPI service acts as a secure intermediary between your mobile app and da
 
 ## API Endpoints
 
-Once deployed on Coolify, your API will be available at: `https://your-app.coolify.domain`
+Your API is deployed and available at: **`https://staging.codinnovations.com/voice-agent-api`**
 
 ### Available Endpoints
 
@@ -59,10 +59,10 @@ Create `services/volunteerApi.js`:
 ```javascript
 import axios from 'axios';
 
-// Replace with your actual Coolify URL after deployment
+// Production API URL
 const API_URL = __DEV__
   ? 'http://localhost:8002'  // For local testing (port 8002)
-  : 'https://your-app.coolify.domain';  // Production URL from Coolify
+  : 'https://staging.codinnovations.com/voice-agent-api';  // Production URL
 
 const api = axios.create({
   baseURL: API_URL,
