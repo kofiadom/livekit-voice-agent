@@ -7,10 +7,12 @@ This guide explains how to connect your React Native app to the FastAPI backend 
 Your architecture now looks like this:
 
 ```
-React Native App → FastAPI (volunteer-api) → Postgres Database (Coolify)
+React Native App → FastAPI (volunteer-api:8002) → Postgres Database (Coolify)
 ```
 
 The FastAPI service acts as a secure intermediary between your mobile app and database.
+
+**Note**: The API runs on port 8002 (mapped from internal port 8000) to avoid conflicts with other services on Coolify.
 
 ## API Endpoints
 
@@ -54,8 +56,8 @@ Create `services/volunteerApi.js`:
 import axios from 'axios';
 
 // Replace with your actual Coolify URL after deployment
-const API_URL = __DEV__ 
-  ? 'http://localhost:8000'  // For local testing
+const API_URL = __DEV__
+  ? 'http://localhost:8002'  // For local testing (port 8002)
   : 'https://your-app.coolify.domain';  // Production URL from Coolify
 
 const api = axios.create({
@@ -415,7 +417,7 @@ Create `.env` file in your React Native project:
 
 ```env
 # Development
-API_URL_DEV=http://localhost:8000
+API_URL_DEV=http://localhost:8002
 
 # Production (replace with your actual Coolify URL)
 API_URL_PROD=https://your-app.coolify.domain
@@ -470,18 +472,18 @@ Before deploying, you can test locally:
    docker-compose up volunteer-api
    ```
 
-2. The API will be available at `http://localhost:8000`
+2. The API will be available at `http://localhost:8002`
 
 3. Test endpoints:
    ```bash
    # Health check
-   curl http://localhost:8000/health
+   curl http://localhost:8002/health
    
    # Get volunteers
-   curl http://localhost:8000/api/volunteers
+   curl http://localhost:8002/api/volunteers
    
    # Search by skill
-   curl http://localhost:8000/api/volunteers?skill=cooking
+   curl http://localhost:8002/api/volunteers?skill=cooking
    ```
 
 ## Security Considerations

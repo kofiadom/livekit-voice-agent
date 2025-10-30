@@ -60,7 +60,7 @@ services:
       context: .
       dockerfile: Dockerfile-api
     ports:
-      - "8000:8000"
+      - "8002:8000"
     environment:
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
