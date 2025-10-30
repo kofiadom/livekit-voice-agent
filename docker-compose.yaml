@@ -55,6 +55,21 @@ services:
     external_links:
       - ${DB_HOST}:${DB_HOST}
 
+  volunteer-api:
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - default
+    external_links:
+      - ${DB_HOST}:${DB_HOST}
 
 networks:
   default:

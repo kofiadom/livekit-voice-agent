@@ -1,0 +1,46 @@
+# Dockerfile for FastAPI Volunteer API Service
+# This service exposes Postgres data via REST API for React Native
+FROM python:3.11-slim
+
+# Keeps Python from buffering stdout and stderr
+ENV PYTHONUNBUFFERED=1
+
+# Create a non-privileged user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/home/appuser" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    appuser
+
+# Set working directory
+WORKDIR /home/appuser
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Switch to appuser for pip install
+USER appuser
+
+# Install dependencies
+RUN python -m pip install --user --no-cache-dir -r requirements.txt
+
+# Switch back to root to copy files
+USER root
+
+# Copy API code
+COPY api.py .
+
+# Change ownership to appuser
+RUN chown -R appuser:appuser /home/appuser
+
+# Switch to appuser for runtime
+USER appuser
+
+# Expose API port
+EXPOSE 8000
+
+# Run the FastAPI application with uvicorn
+CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

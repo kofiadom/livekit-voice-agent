@@ -23,3 +23,7 @@ pytz
 
 # PostgreSQL database adapter
 psycopg2-binary
+
+# FastAPI and API dependencies
+fastapi
+uvicorn[standard]
